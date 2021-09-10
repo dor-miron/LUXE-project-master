@@ -37,7 +37,7 @@ There are 3 cases for positron beams:
 
 Single           |  Several | Multipe
 :-------------------------:|:-------------------------:|:-------------------------:
-![](rmImages//cold.png)  |  ![](rmImages//warm.png) |  ![](rmImages//hot.png)
+![](rmImages//cold.PNG)  |  ![](rmImages//warm.png) |  ![](rmImages//hot.png)
 
 
 * Currently the project addresses only the first 'Cold' type of data.
