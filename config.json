@@ -1,0 +1,54 @@
+{
+    "name": "2classResNet10_CEonly",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "General_model",
+        "args": {"model_type": "ResNet10", "num_classes": 1}
+    },
+    "data_loader": {
+        "type": "CE_Loader",
+        "args":{
+            "data_dir": "data\\",
+            "batch_size": 128,
+            "shuffle": true,
+            "validation_split": 0.25,
+            "num_workers": 2,
+            "chunk_low_num": 0,
+            "chunk_high_num": 1,
+            "partial_change": 1,
+            "layer_change_lim": 0
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.001,
+            "weight_decay": 0,
+            "amsgrad": true
+        }
+    },
+    "loss": "MSE_loss",
+    "metrics": [
+        "bias_avg", "bias_std"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 50,
+
+        "save_dir": "saved/",
+        "save_period": 1,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 10,
+
+        "tensorboard": true
+    }
+}
