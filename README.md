@@ -3,8 +3,12 @@
 ## Summary
 This project is meant to generate a Machine Learning framework that may be added to particle detectors.
 The detector is a calorimeter, containing multiple pads that absorb the particle's energy.
+ - For single positron data:
 The model's goal, given a data sample of a positron beam hitting the calorimeter, is to predict the beam's initial energy.
 An optional goal is also to predict the entry coordinates of the beam.
+ - For multilple positrons data:
+There are numerous goals explored. Predicting N the number of positrons in the sample, predicting E the mean
+    energy value of the entire sample and predicting the energy distribution divided into 20 bins in the form of a histogram.
 
 * The project's folder format and structure is taken from [This template](https://github.com/victoresque/pytorch-template)
 
@@ -25,9 +29,12 @@ An optional goal is also to predict the entry coordinates of the beam.
     The pads are indexed in an (x,y,z) format.
 * Data was generated artificially using monte-carlo methods.
 * Data labels for each calorimeter sample there are: (all values are continuous)
-    * X entry coordinate
-    * Y entry coordinate
-    * Initial energy value
+    - For single showers:
+        * X entry coordinate
+        * Y entry coordinate
+        * Initial energy value
+    - For 'IP0*' files (multiple showers):
+        * A list of the energy value in GeV for each shower.
     
 * The 'data_loader' folder handles reading the files, converting them to a 3d matrix etc.
 * Attached in the 'data' folder is a fraction of the dataset for running example.
@@ -37,11 +44,24 @@ There are 3 cases for positron beams:
 
 Single           |  Several | Multipe
 :-------------------------:|:-------------------------:|:-------------------------:
-![](rmImages//cold.PNG)  |  ![](rmImages//warm.png) |  ![](rmImages//hot.png)
+![](rmImages//cold.png)  |  ![](rmImages//warm.png) |  ![](rmImages//hot.png)
 
 
 * Currently the project addresses only the first 'Cold' type of data.
 
+### Data Generation
+
+* In 'utils\\myutils.py' use the function "merge_and_split_data", with the relevant file path.
+* This function generates 'train.pt' and 'test.pt' files from the relevant dataset, into the 'train' and 'test' folders 
+in the 'data folder'. These datasets will then be loaded for training and testing.
+  * NOTE: The dataset return values are eventually determined by the 'Bin_energy_data' class in the 'data_loaders.py' file.
+    Change them accordingly. The current options are:
+    * XY values.
+    * N the number of showers.
+    * Energy bins - 20 bins of energy containing the amount of showers for each energy range.
+    * E the mean energy value of the sample.
+    
+* The dataset type also allows for data manipulation and analysis, some functionalities are commented out in the code.
 ## Model
 
 * The model files are based on [this](https://github.com/kenshohara/video-classification-3d-cnn-pytorch)
@@ -65,6 +85,10 @@ Result examples:
 1           |  2 
 :-------------------------:|:-------------------------:
 ![](rmImages//res1.png)  |  ![](rmImages//res2.png) |  
+
+3           |  4 
+:-------------------------:|:-------------------------:
+![](rmImages//binsgraph.png)  |  ![](rmImages//Nresults.png) |  
 
 
 ## Recreate results:
