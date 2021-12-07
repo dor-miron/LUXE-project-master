@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torchvision.utils import make_grid
+
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 
@@ -27,7 +27,7 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.num_classes = 2  # Mine - to track the prediction type (EN, XY, Both)
+        self.num_classes = 1  # Mine - to track the prediction type (EN, XY, Both)
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -42,21 +42,19 @@ class Trainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         for batch_idx, data in enumerate(self.data_loader):
-            en_dep, x_y, EN = data
-            en_dep, x_y, EN = en_dep.to(self.device), x_y.to(self.device), EN.to(self.device)
-
-            # Choose the correct targets based on the architecture
-            target = []
-            if self.num_classes == 1:
-                target = EN.float().unsqueeze(1)
-            elif self.num_classes == 2:
-                target = x_y
-            elif self.num_classes == 3:
-                target = torch.cat([x_y, EN], dim=1)
+            en_dep, target, _, _ = data
+            en_dep, target = en_dep.to(self.device), target.to(self.device)
+            target = target.float()
 
             self.optimizer.zero_grad()
             output = self.model(en_dep)
+
+            ####################################
+            # Notice: sometimes its output and sometimes its output[:, 0], depends on some loss functions and formats.
+            # Don't forget to update it in the validation epoch too!
             loss = self.criterion(output, target)
+            ####################################
+
             loss.backward()
             self.optimizer.step()
 
@@ -94,30 +92,28 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
 
-        # accumulate the labes, the prediction and the bias for histogram representations
+        """
+        Here I am preparing the tensors to accumulate the results of all of the batches.
+        out and target are the model results and labels, and bias is the difference list between them.
+        """
         tot_bias = torch.Tensor().to(self.device)
         tot_out = torch.Tensor().to(self.device)
         tot_target = torch.Tensor().to(self.device)
 
         with torch.no_grad():
             for batch_idx, data in enumerate(self.data_loader):
-                en_dep, x_y, EN = data
-                en_dep, x_y, EN = en_dep.to(self.device), x_y.to(self.device), EN.to(self.device)
-
-                # Choose the correct targets based on the architecture
-                target = []
-                if self.num_classes == 1:
-                    target = EN.float().unsqueeze(1)
-                elif self.num_classes == 2:
-                    target = x_y
-                elif self.num_classes == 3:
-                    target = torch.cat([x_y, EN], dim=1)
-
+                en_dep, target, _, _ = data
+                en_dep, target = en_dep.to(self.device), target.to(self.device)
+                target = target.float()
                 output = self.model(en_dep)
+
+                ####################################
+                # Notice: sometimes its output and sometimes its output[:, 0], depends on some loss functions and formats.
                 loss = self.criterion(output, target)
                 bias = target - output
+                ####################################
 
-                # Accum
+                # Accumulate the outputs, labels and biases.
                 tot_bias = torch.cat((tot_bias, bias), 0)
                 tot_target = torch.cat((tot_target, target), 0)
                 tot_out = torch.cat((tot_out, output), 0)
@@ -126,12 +122,12 @@ class Trainer(BaseTrainer):
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
-                # self.writer.add_image('input', make_grid(en_dep.cpu(), nrow=8, normalize=True))
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
 
+        # Here we write the accumulated data.
         self.writer.add_histogram("tot_out", tot_out, bins='auto')
         self.writer.add_histogram("tot_bias", tot_bias, bins='auto')
         self.writer.add_histogram("tot_target", tot_target, bins='auto')
@@ -147,3 +143,4 @@ class Trainer(BaseTrainer):
             current = batch_idx
             total = self.len_epoch
         return base.format(current, total, 100.0 * current / total)
+
