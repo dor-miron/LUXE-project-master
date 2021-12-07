@@ -125,7 +125,7 @@ def xymatio(filename, flagKeySensitive=True):
         return listOfInput
 
 
-def energymatio(filename):
+def energymatio(filename) -> object:
     # return a dict of energies as {'id':(energy,...)}
     dictOfInput = {}  # if Key is sensitive, always True here
     inputdict = matio.loadmat(filename)
