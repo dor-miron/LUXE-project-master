@@ -2,6 +2,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from base import BaseModel
 from model import ResNet3d
+from torchvision import models
+
 
 class MnistModel(BaseModel):
     def __init__(self, num_classes=10):
@@ -22,17 +24,23 @@ class MnistModel(BaseModel):
         return F.log_softmax(x, dim=1)
 
 
-def General_model(model_type, num_classes):
-    # Generate the wanted model -
-    # num_classes = 1: Energy Prediction only
-    # num_classes = 2 : XY prediction only
-    # num_classes = 3 : XY prediction, En Prediction
-
+def general_model(model_type, num_classes):
     smp_size = 16 * 5
     smp_dur = 64
 
     if model_type == "ResNet10":
         model = ResNet3d.ResNet(ResNet3d.BasicBlock, [1, 1, 1, 1], sample_size=smp_size,
-                                sample_duration=smp_dur, num_classes=num_classes)
+                                  sample_duration=smp_dur, num_classes=num_classes)
 
+    if model_type == 'ResNet34':
+        model = ResNet3d.ResNet(ResNet3d.BasicBlock, [3, 4, 6, 3], sample_size=smp_size,
+                                  sample_duration=smp_dur, num_classes=num_classes)
+
+    return model
+
+
+def model_2d(model_type, num_classes):
+    model = models.resnet18(pretrained=False)
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+    model.fc = nn.Linear(512, num_classes)
     return model
