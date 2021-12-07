@@ -1,23 +1,19 @@
 {
-    "name": "2classResNet10_CEonly",
+    "name": "new_model",
     "n_gpu": 1,
 
     "arch": {
-        "type": "General_model",
-        "args": {"model_type": "ResNet10", "num_classes": 1}
+        "type": "general_model",
+        "args": {"model_type": "ResNet10", "num_classes": 20}
     },
     "data_loader": {
-        "type": "CE_Loader",
+        "type": "data_loader",
         "args":{
             "data_dir": "data\\",
             "batch_size": 128,
             "shuffle": true,
-            "validation_split": 0.25,
-            "num_workers": 2,
-            "chunk_low_num": 0,
-            "chunk_high_num": 1,
-            "partial_change": 1,
-            "layer_change_lim": 0
+            "validation_split": 0.1,
+            "num_workers": 2
         }
     },
     "optimizer": {
