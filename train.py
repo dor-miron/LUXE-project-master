@@ -32,6 +32,12 @@ def main(config):
     model = config.init_obj('arch', module_arch)
     logger.info(model)
 
+    # For RANDOM TRAINED
+    # checkpoint = torch.load(
+    #     'C:\\Users\\elihu\\PycharmProjects\\LUXE\\LUXE-project-master\\saved\\models\\rand_train_mean_EN_predictor\\model_best.pth')  # ORIG - dict with state dict in it - not my format
+    # state_dict = checkpoint['state_dict']
+    # model.load_state_dict(state_dict)
+
     # prepare for (multi-device) GPU training
     device, device_ids = prepare_device(config['n_gpu'])
     model = model.to(device)
